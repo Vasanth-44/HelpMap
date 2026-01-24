@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthSafe</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <!-- TOP MENU BAR -->
+    <nav class="menu-bar">
+        <div class="logo">HealthSafe</div>
+
+        <ul class="menu">
+            <li class="active">Home</li>
+            <li>Patient</li>
+            <li>Helper</li>
+            <li>Location</li>
+        </ul>
+
+        <!-- Profile Icon -->
+        <div class="profile">
+            <img src="profile.png" alt="Profile">
+        </div>
+    </nav>
+    <div class="content">
+
+    <!-- PROFILE CIRCLE BAR -->
+  <div class="content">
+
+    <!-- HOME SECTION -->
+    <section id="home" class="page active">
+        <div class="profile-bar">
+            <img src="profile.png" class="profile-pic">
+
+            <div class="profile-info">
+                <h3>Ramesh Kumar</h3>
+                <p>Village: Lakshmipuram</p>
+                <p>Street: Main Road</p>
+                <p class="phone-hidden">Phone: 98******32</p>
+            </div>
+
+            <div class="notifications">
+                <span>🔔</span>
+                <span>⚠️</span>
+            </div>
+        </div>
+  <div class="activity-section">
+
+    <div class="activity-card">
+        <h4>🧑‍⚕️ Patient History</h4>
+        <div id="patientHistory">
+            <p style="color:#aaa;">No patient activity yet</p>
+        </div>
+    </div>
+
+    <div class="activity-card">
+        <h4>🤝 Helper History</h4>
+        <div id="helperHistory">
+            <p style="color:#aaa;">No helper activity yet</p>
+        </div>
+    </div>
+</div>
+    </section>
+    <!-- PATIENT SECTION -->
+<section id="patient" class="page">
+
+    <div class="card">
+        <h3>🧑‍⚕️ Patient Dashboard</h3>
+
+        <label>Emergency Type</label>
+        <select>
+            <option value="">Select Emergency</option>
+            <option>Accident</option>
+            <option>Pregnancy</option>
+            <option>Sudden Illness</option>
+            <option>Other</option>
+        </select>
+
+        <label>Description (optional)</label>
+        <textarea placeholder="Describe the emergency briefly"></textarea>
+
+        <label>Upload Emergency Photo</label>
+        <input type="file">
+
+        <button>Send Emergency Request</button>
+    </div>
+
+</section>
+   <!-- HELPER SECTION -->
+<section id="helper" class="page">
+
+    <div class="card">
+        <h3>🤝 Helper Dashboard</h3>
+        <label>Availability Status</label>
+<select id="statusSelect">
+    <option value="available">Available</option>
+    <option value="busy">Busy</option>
+    <option value="offline">Offline</option>
+</select>
+
+<p style="margin-top:10px;">
+    Current Status:
+    <span id="statusBadge" class="status available">Available</span>
+</p>
+
+    </div>
+
+    <div class="card">
+        <h4>Nearby Emergency Request</h4>
+
+        <p><strong>Type:</strong> Accident</p>
+        <p><strong>Distance:</strong> 3.2 km</p>
+        <p><strong>Location:</strong> Nearby Village</p>
+
+        <div class="btn-group">
+            <button class="accept">Accept</button>
+            <button class="reject">Reject</button>
+        </div>
+    </div>
+
+</section>
+   <!-- LOCATION SECTION -->
+<section id="location" class="page">
+    <div class="card">
+        <h3>📍 Real-Time Location Tracking</h3>
+        <p id="locationText" style="color:#bbb; margin-bottom:10px;"> Fetching live location...</p>
+        <div class="map-container">
+            <iframe
+                id="mapFrame"
+                width="100%"
+                height="350"
+                style="border:0; border-radius:12px;"
+                loading="lazy">
+            </iframe>
+        </div>
+        <button id="navigateBtn" style="margin-top:15px;">🧭 Navigate</button>
+        <p style="margin-top:10px; font-size:13px; color:#aaa;"> Location updates in real time using GPS</p>
+    </div>
+
+</section>
+
+
+</div>
+<script src="main.js"></script>
+</body>
+</html>

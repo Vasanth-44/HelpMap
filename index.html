@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Safe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>HEALTH SAFE</h1>
+       <form onsubmit="goToMain(event)">
+        <label>Phone Number</label>
+<input
+    type="tel"
+    id="phone"
+    placeholder="Enter 10-digit phone number"
+    maxlength="10"
+    required
+>
+
+   
+
+    <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="patient">Patient</option>
+        <option value="helper">Helper</option>
+    </select>
+
+    <button type="submit">LOGIN</button>
+</form>
+    </div>
+    <script>
+    function goToMain(event) {
+    event.preventDefault(); // stop page refresh
+
+    const phoneInput = document.getElementById("phone");
+    const role = document.getElementById("role").value;
+
+    const phone = phoneInput.value.trim();
+    const phoneRegex = /^[0-9]{10}$/; // exactly 10 digits
+
+    // Phone validation
+    if (!phoneRegex.test(phone)) {
+        alert("Please enter a valid 10-digit phone number");
+        phoneInput.focus();
+        return; // STOP here if invalid
+    }
+
+    // Store data
+    localStorage.setItem("phone", phone);
+    localStorage.setItem("userRole", role);
+
+    // Redirect to common page
+    window.location.href = "main.html";
+}
+document.getElementById("phone").addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "");
+});
+
+
+</script>
+
+</body>
+</html>
+
