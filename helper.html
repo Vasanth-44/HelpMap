@@ -3,25 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthSafe — Responder Dashboard</title>
+    <title>HelpMap — Responder Dashboard</title>
     <!-- Standard Clean Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="main.css">
+    <style>
+        .map-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
+            margin-bottom: 20px;
+        }
+        .map-card-header {
+            padding: 12px 18px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .map-view-large {
+            height: 380px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- NAVBAR (HELPER / RESPONDER PORTAL) -->
+    <!-- NAVBAR (RESPONDER PORTAL) -->
     <header class="navbar">
         <div class="nav-left">
-            <div class="brand-badge" style="background-color: #dcfce7; color: #16a34a;">✚</div>
+            <div class="brand-badge" style="background-color: #dcfce7; color: #16a34a;">📍</div>
             <div>
-                <span class="brand-name">HealthSafe</span>
+                <span class="brand-name">HelpMap</span>
                 <span class="brand-portal" style="background: #dcfce7; color: #15803d;">Responder Portal</span>
             </div>
         </div>
 
         <div class="nav-right">
-            <!-- Helper Availability Status Selector -->
+            <!-- Responder Duty Status Selector -->
             <select id="helperStatusSelect" class="form-control" style="width: auto; padding: 5px 10px; font-size: 13px; font-weight: 600;" onchange="updateDutyStatus(this.value)">
                 <option value="available">🟢 Available for calls</option>
                 <option value="busy">🟡 On Active Mission</option>
@@ -39,19 +60,43 @@
         </div>
     </header>
 
-    <!-- MAIN HELPER CONTAINER -->
+    <!-- MAIN RESPONDER CONTAINER -->
     <div class="container">
+
+        <!-- 1. PERSISTENT LIVE AREA MAP (PROMINENTLY FEATURED) -->
+        <div class="map-card">
+            <div class="map-card-header">
+                <div>
+                    <strong style="font-size: 15px; color: #0f172a;">📍 Live Responder Map & Telemetry</strong>
+                    <span style="font-size: 12px; color: #64748b; margin-left: 8px;" id="mapSubtext">
+                        Showing your GPS position and local healthcare coverage
+                    </span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-secondary" style="font-size: 12px; padding: 5px 10px;" onclick="recenterMap()">
+                        🎯 Recenter My Location
+                    </button>
+                    <button type="button" class="btn-secondary" style="font-size: 12px; padding: 5px 10px;" onclick="openGoogleMaps()">
+                        🧭 Open in Google Maps
+                    </button>
+                </div>
+            </div>
+            <!-- Interactive Leaflet Map always mounted here -->
+            <div id="responderMainMap" class="map-view-large"></div>
+        </div>
+
+        <!-- 2. TWO-COLUMN OPERATIONAL DASHBOARD -->
         <div class="dashboard-grid">
 
-            <!-- LEFT COLUMN: INCOMING REQUESTS & ACTIVE MISSION -->
+            <!-- LEFT COLUMN: ACTIVE MISSION & INCOMING ALERTS -->
             <div>
 
-                <!-- Active Mission Card (Shown when an emergency is accepted) -->
+                <!-- Active Mission Card (Shown when an emergency is in progress) -->
                 <div id="activeMissionCard" class="card active-alert-box" style="display: none; background: #f0fdf4; border-color: #bbf7d0;">
                     <div class="active-alert-header">
-                        <span class="active-alert-title" style="color: #15803d;">🚑 Active Emergency Mission in Progress</span>
+                        <span class="active-alert-title" style="color: #15803d;">🚑 Active Emergency Mission</span>
                         <span class="status-pill success">
-                            <span class="status-dot"></span> Responding
+                            <span class="status-dot"></span> In Progress
                         </span>
                     </div>
 
@@ -60,7 +105,7 @@
                         <strong id="missionPatientName">Ramesh Kumar</strong>
                     </div>
                     <div class="info-row">
-                        <span>Contact Number:</span>
+                        <span>Patient Contact:</span>
                         <strong><a id="missionPatientPhoneLink" href="tel:9876543210" style="color: #2563eb; text-decoration: none;">+91 98765 43210</a></strong>
                     </div>
                     <div class="info-row">
@@ -68,7 +113,7 @@
                         <strong id="missionType" style="color: #dc2626;">Road Accident</strong>
                     </div>
                     <div class="info-row">
-                        <span>Patient Location:</span>
+                        <span>Patient Address:</span>
                         <strong id="missionLocation">Lakshmipuram, Main Road</strong>
                     </div>
                     <div class="info-row" id="missionNotesRow" style="display: none;">
@@ -76,32 +121,13 @@
                         <strong id="missionNotes">-</strong>
                     </div>
 
-                    <!-- Clean Leaflet Map -->
-                    <div id="helperMap" class="map-container"></div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 16px;">
-                        <button type="button" class="btn-primary" style="flex: 1;" onclick="openGoogleMaps()">
-                            🧭 Open in Google Maps
-                        </button>
-                        <button type="button" class="btn-emergency" style="flex: 1; background-color: #16a34a;" onclick="completeMission()">
+                    <div style="display: flex; gap: 10px; margin-top: 14px;">
+                        <a id="btnCallPatientDirect" href="tel:9876543210" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
+                            📞 Call Patient
+                        </a>
+                        <button type="button" class="btn-emergency" style="flex: 1.5; background-color: #16a34a;" onclick="completeMission()">
                             ✓ Complete & Mark Resolved
                         </button>
-                    </div>
-                </div>
-
-                <!-- Duty Availability Card -->
-                <div class="card">
-                    <h2 class="card-title">Responder Status</h2>
-                    <p class="card-subtitle">You are active in the Lakshmipuram responder circle (within 5 km).</p>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <div>
-                            <span style="font-size: 13px; font-weight: 600; color: #0f172a;" id="statusTextDisplay">Status: Available & On Duty</span>
-                            <span style="font-size: 12px; color: #64748b; display: block; margin-top: 2px;">Your location is live to nearby patients</span>
-                        </div>
-                        <span class="status-pill success" id="statusBadgeDisplay">
-                            <span class="status-dot"></span> Ready
-                        </span>
                     </div>
                 </div>
 
@@ -111,7 +137,7 @@
                         <h2 class="card-title" style="margin-bottom: 0;">Nearby Emergency Requests</h2>
                         <span class="status-pill neutral" id="incomingCountBadge">0 Pending</span>
                     </div>
-                    <p class="card-subtitle">Calls initiated by patients within your immediate area.</p>
+                    <p class="card-subtitle">Calls initiated by patients within your immediate sector.</p>
 
                     <div id="incomingCallsList">
                         <!-- Populated by JavaScript -->
@@ -120,13 +146,29 @@
 
             </div>
 
-            <!-- RIGHT COLUMN: STATS & RESCUE LOGS -->
+            <!-- RIGHT COLUMN: STATUS & RESCUE LOGS -->
             <div>
 
-                <!-- Responder Contribution Stats -->
+                <!-- Duty Availability Card -->
                 <div class="card">
-                    <h3 class="card-title">Responder Performance</h3>
-                    <p class="card-subtitle">Your service history this month</p>
+                    <h3 class="card-title">Responder Status</h3>
+                    <p class="card-subtitle">Active circle: Lakshmipuram (within 5 km radius)</p>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div>
+                            <span style="font-size: 13px; font-weight: 600; color: #0f172a;" id="statusTextDisplay">Status: Available & On Duty</span>
+                            <span style="font-size: 12px; color: #64748b; display: block; margin-top: 2px;">Visible on HelpMap emergency network</span>
+                        </div>
+                        <span class="status-pill success" id="statusBadgeDisplay">
+                            <span class="status-dot"></span> Ready
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Responder Performance Stats -->
+                <div class="card">
+                    <h3 class="card-title">Service Contribution</h3>
+                    <p class="card-subtitle">Your monthly response telemetry</p>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
@@ -164,10 +206,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        let hMap = null;
+        let rMap = null;
         let helperMarker = null;
         let patientMarker = null;
-        let coords = { lat: 13.0890, lng: 80.2760 }; // Helper coords slightly offset
+        let routePolyline = null;
+        let helperCoords = { lat: 13.0890, lng: 80.2760 };
 
         function showToast(msg) {
             const toast = document.getElementById("toastNotice");
@@ -202,6 +245,115 @@
             }
         }
 
+        /* Initialize Map on Dashboard */
+        function initResponderMap() {
+            if (typeof L === 'undefined') return;
+
+            // Pick up cached GPS if available
+            const cached = localStorage.getItem("userCoords");
+            if (cached) {
+                try {
+                    const c = JSON.parse(cached);
+                    helperCoords = { lat: c.lat + 0.006, lng: c.lng + 0.005 };
+                } catch(e) {}
+            }
+
+            if (!rMap) {
+                rMap = L.map('responderMainMap').setView([helperCoords.lat, helperCoords.lng], 14);
+
+                // Standard OpenStreetMap tiles
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(rMap);
+
+                // Helper's own location marker
+                helperMarker = L.marker([helperCoords.lat, helperCoords.lng])
+                    .addTo(rMap)
+                    .bindPopup("<b>Dr. Arvind (You)</b><br>Equipped with First-Aid Kit")
+                    .openPopup();
+
+                // Nearby Hospital Markers on map
+                const h1 = L.circleMarker([helperCoords.lat - 0.008, helperCoords.lng - 0.004], {
+                    radius: 7,
+                    fillColor: '#2563eb',
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(rMap).bindPopup("<b>Lakshmipuram Primary Health Center</b><br>24/7 Ambulance Point");
+
+                const h2 = L.circleMarker([helperCoords.lat + 0.007, helperCoords.lng + 0.008], {
+                    radius: 7,
+                    fillColor: '#2563eb',
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(rMap).bindPopup("<b>City Trauma Hospital</b><br>Emergency Care Unit");
+            }
+
+            // Sync with active emergency on the map if exists
+            updateMapWithEmergency();
+            setTimeout(() => { if (rMap) rMap.invalidateSize(); }, 200);
+        }
+
+        function recenterMap() {
+            if (rMap) {
+                rMap.setView([helperCoords.lat, helperCoords.lng], 14);
+                if (helperMarker) helperMarker.openPopup();
+            }
+        }
+
+        function updateMapWithEmergency() {
+            const activeReq = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "null");
+            const mapSubtext = document.getElementById("mapSubtext");
+
+            if (activeReq && (activeReq.status === "waiting" || activeReq.status === "accepted")) {
+                const pLat = (activeReq.coords && activeReq.coords.lat) ? activeReq.coords.lat : 13.0827;
+                const pLng = (activeReq.coords && activeReq.coords.lng) ? activeReq.coords.lng : 80.2707;
+
+                if (!patientMarker) {
+                    patientMarker = L.marker([pLat, pLng], {
+                        title: "Patient Incident Location"
+                    }).addTo(rMap);
+                } else {
+                    patientMarker.setLatLng([pLat, pLng]);
+                }
+
+                patientMarker.bindPopup(`<b>Emergency: ${activeReq.emergencyType}</b><br>Patient: ${activeReq.patientName}<br>Location: ${activeReq.location}`).openPopup();
+
+                // Add or update route polyline
+                if (!routePolyline) {
+                    routePolyline = L.polyline([[helperCoords.lat, helperCoords.lng], [pLat, pLng]], {
+                        color: '#dc2626',
+                        weight: 4,
+                        dashArray: '8, 8'
+                    }).addTo(rMap);
+                } else {
+                    routePolyline.setLatLngs([[helperCoords.lat, helperCoords.lng], [pLat, pLng]]);
+                }
+
+                if (rMap) {
+                    const bounds = L.latLngBounds([[helperCoords.lat, helperCoords.lng], [pLat, pLng]]);
+                    rMap.fitBounds(bounds, { padding: [40, 40] });
+                }
+
+                if (mapSubtext) {
+                    mapSubtext.innerHTML = `<strong style="color: #dc2626;">🚨 Patient Emergency Alert Active on Map (${activeReq.emergencyType})</strong>`;
+                }
+            } else {
+                if (patientMarker) {
+                    rMap.removeLayer(patientMarker);
+                    patientMarker = null;
+                }
+                if (routePolyline) {
+                    rMap.removeLayer(routePolyline);
+                    routePolyline = null;
+                }
+                if (mapSubtext) {
+                    mapSubtext.textContent = "Showing your GPS position and local healthcare coverage";
+                }
+            }
+        }
+
         function renderIncomingRequests() {
             const container = document.getElementById("incomingCallsList");
             const countBadge = document.getElementById("incomingCountBadge");
@@ -209,12 +361,13 @@
 
             const activeReq = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "null");
 
-            // Check if this helper is already handling an active mission
+            // Check if this responder is currently in an accepted mission
             if (activeReq && activeReq.status === "accepted" && activeReq.helper && activeReq.helper.name.includes("Arvind")) {
                 missionCard.style.display = "block";
                 document.getElementById("missionPatientName").textContent = activeReq.patientName || "Ramesh Kumar";
                 document.getElementById("missionPatientPhoneLink").textContent = `+91 ${activeReq.patientPhone || '9876543210'}`;
                 document.getElementById("missionPatientPhoneLink").href = `tel:${activeReq.patientPhone || '9876543210'}`;
+                document.getElementById("btnCallPatientDirect").href = `tel:${activeReq.patientPhone || '9876543210'}`;
                 document.getElementById("missionType").textContent = activeReq.emergencyType;
                 document.getElementById("missionLocation").textContent = activeReq.location;
 
@@ -225,9 +378,9 @@
                     document.getElementById("missionNotesRow").style.display = "none";
                 }
 
-                initHelperMap(activeReq.coords);
-                container.innerHTML = `<p style="font-size: 13px; color: #64748b; padding: 12px 0;">You are currently assisting ${activeReq.patientName}. Complete the mission above before accepting new calls.</p>`;
+                container.innerHTML = `<p style="font-size: 13px; color: #64748b; padding: 12px 0;">You are actively assisting ${activeReq.patientName}. Telemetry and directions are active on your map above.</p>`;
                 countBadge.textContent = "1 Active";
+                updateMapWithEmergency();
                 return;
             } else {
                 missionCard.style.display = "none";
@@ -245,7 +398,7 @@
                         <div style="font-size: 13px; color: #475569; margin: 4px 0;">
                             <strong>Patient:</strong> ${activeReq.patientName} (+91 ${activeReq.patientPhone})<br>
                             <strong>Location:</strong> ${activeReq.location}<br>
-                            <strong>Distance:</strong> ~1.2 km away (Estimated 4 min reach)<br>
+                            <strong>Distance:</strong> ~1.2 km away (Marked on map above)<br>
                             ${activeReq.notes ? `<strong>Notes:</strong> ${activeReq.notes}<br>` : ''}
                             <span style="font-size: 11px; color: #64748b;">Reported at ${activeReq.time}</span>
                         </div>
@@ -259,6 +412,7 @@
                         </div>
                     </div>
                 `;
+                updateMapWithEmergency();
             } else {
                 countBadge.textContent = "0 Pending";
                 container.innerHTML = `
@@ -269,6 +423,7 @@
                         </button>
                     </div>
                 `;
+                updateMapWithEmergency();
             }
         }
 
@@ -285,14 +440,14 @@
             };
 
             localStorage.setItem("activeEmergencyRequest", JSON.stringify(activeReq));
-            showToast("Emergency accepted! Navigating to patient...");
+            showToast("Emergency accepted! Route shown on map above.");
             renderIncomingRequests();
         }
 
         function passEmergencyRequest() {
             showToast("Request passed to next nearest responder.");
             const container = document.getElementById("incomingCallsList");
-            container.innerHTML = `<p style="font-size: 13px; color: #64748b; padding: 12px;">Request passed. Standing by for other alerts.</p>`;
+            container.innerHTML = `<p style="font-size: 13px; color: #64748b; padding: 12px;">Request passed. Standing by on HelpMap.</p>`;
         }
 
         function completeMission() {
@@ -300,10 +455,9 @@
             localStorage.removeItem("activeEmergencyRequest");
 
             addHelperHistory(activeReq.patientName || "Ramesh Kumar", activeReq.emergencyType || "Emergency", "Completed & Assisted");
-            showToast("Emergency mission completed successfully. Thank you for your service!");
+            showToast("Emergency mission completed successfully. Thank you!");
             renderIncomingRequests();
 
-            // Update stats
             const currentCount = parseInt(document.getElementById("totalAssistedCount").textContent || "12", 10);
             document.getElementById("totalAssistedCount").textContent = currentCount + 1;
         }
@@ -323,29 +477,8 @@
                 helper: null
             };
             localStorage.setItem("activeEmergencyRequest", JSON.stringify(sample));
-            showToast("🚨 New incoming patient emergency received!");
+            showToast("🚨 New incoming patient emergency received and marked on map!");
             renderIncomingRequests();
-        }
-
-        function initHelperMap(patientCoords) {
-            if (typeof L === 'undefined') return;
-            const pLat = (patientCoords && patientCoords.lat) ? patientCoords.lat : 13.0827;
-            const pLng = (patientCoords && patientCoords.lng) ? patientCoords.lng : 80.2707;
-            const hLat = pLat + 0.007;
-            const hLng = pLng + 0.006;
-
-            if (!hMap) {
-                hMap = L.map('helperMap').setView([pLat, pLng], 14);
-                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19
-                }).addTo(hMap);
-
-                patientMarker = L.marker([pLat, pLng]).addTo(hMap).bindPopup("<b>Patient Location</b><br>Ramesh Kumar").openPopup();
-                helperMarker = L.marker([hLat, hLng]).addTo(hMap).bindPopup("<b>Your Current GPS</b>");
-
-                L.polyline([[hLat, hLng], [pLat, pLng]], { color: '#16a34a', weight: 4, dashArray: '6, 6' }).addTo(hMap);
-            }
-            setTimeout(() => { if (hMap) hMap.invalidateSize(); }, 200);
         }
 
         function openGoogleMaps() {
@@ -397,7 +530,6 @@
             renderHelperHistory();
         }
 
-        // Live cross-tab sync if a patient submits a request in another tab
         window.addEventListener("storage", (e) => {
             if (e.key === "activeEmergencyRequest") {
                 renderIncomingRequests();
@@ -410,10 +542,10 @@
                 document.getElementById("helperPhoneDisplay").textContent = `+91 ${phone}`;
             }
 
+            initResponderMap();
             renderIncomingRequests();
             renderHelperHistory();
 
-            // Default seed if history empty
             if (!localStorage.getItem("helper_history")) {
                 addHelperHistory("Suresh Verma", "Sudden Illness", "Assisted on 22 Jan");
                 addHelperHistory("Priya Sharma", "Maternal Care", "Assisted on 20 Jan");

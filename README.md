@@ -1,43 +1,37 @@
-# HelpMap 🚨📍
+# HelpMap 📍🚨
 
-A real-time emergency healthcare coordination web application connecting patients with nearby medical responders, volunteers, and emergency services using location-based telemetry.
-
----
-
-## ✨ Features
-
-- **Screen 1: Authentication & Role Selection**
-  - Instant portal login with phone verification.
-  - Role switcher (Patient vs. Responder).
-  - 1-Click quick demo access for rapid testing.
-  - Automatic silent GPS location detection with fallback coordinates.
-
-- **Screen 2: Patient Emergency Command Hub**
-  - Pulsing One-Touch SOS Alert with multi-ring radar animation.
-  - Emergency Category selector (Accident, Cardiac / Chest Pain, Maternal, Severe Trauma, Sudden Illness).
-  - Real-time Dispatch Stepper: Broadcast ➔ Responder Accepted ➔ En Route ➔ Arrived.
-  - Live distance & ETA countdown with synthesizer alert chimes.
-
-- **Screen 3: Responder Hub & Interactive Radar**
-  - Availability status toggle (Available & Ready, On Mission, Offline).
-  - Incoming emergency call cards with urgency tags, distance, and condition.
-  - Accept & Navigate / Pass incident workflows.
-  - Interactive Leaflet dark radar map with live telemetry and route line.
-  - Simulated responder movement engine for interactive demonstrations.
-
-- **Frictionless Experience**
-  - **Zero-nag permissions:** Handled gracefully without blocking alerts or repetitive dialogs.
-  - **Web Audio API Synthesizer:** Built-in siren, accept, and UI feedback tones without external audio dependencies.
-  - **Dark Glassmorphic UI:** Built with Vanilla CSS, responsive typography, and glowing telemetry badges.
+A clean, minimalist community emergency and healthcare assistance web application connecting patients with nearby responders, volunteers, and emergency healthcare services using real-time location mapping.
 
 ---
 
-## 🚀 Getting Started
+## 🌟 Key Features
 
-To run locally:
+### 1. Dedicated Patient Dashboard (`patient.html`)
+- **Emergency Help Request:** Quick form to select emergency category (Accident, Cardiac, Maternal, Severe Trauma, Sudden Illness).
+- **Auto-detected GPS:** Seamless location tracking with fallback coordinates.
+- **Assigned Responder Telemetry:** When a responder accepts, the patient sees responder contact, estimated arrival time, and a live map showing their route.
+- **One-Tap Emergency Numbers:** Direct links to Ambulance (108), National Emergency (112), and Police (100).
+- **Request History:** Log of past assistance requests.
+
+### 2. Dedicated Responder Dashboard (`helper.html`)
+- **Persistent Live Map:** Prominently featured interactive OpenStreetMap on the responder dashboard displaying the responder's current location, nearby healthcare facilities, and incoming/active patient emergency markers.
+- **Incoming Calls Feed:** Real-time feed of emergency calls from nearby patients with one-click **"Accept & Navigate"** or **"Pass"**.
+- **Active Mission Panel:** Full patient details, direct "Call Patient" button, and map navigation.
+- **Duty Availability:** Toggle between Available, Busy, and Offline.
+- **Performance & Rescue History:** Monthly statistics and assisted cases log.
+
+### 3. Portal Login & Role Routing (`index.html`)
+- Phone-number login with distinct Patient and Responder selection.
+- One-click demo buttons for rapid testing.
+- Direct redirection to the appropriate separate dashboard.
+
+---
+
+## 💻 Running Locally
+
+Start a local static web server:
 ```bash
-# Start a local static server
 python -m http.server 8000
 ```
 
-Open your browser at `http://localhost:8000`.
+Open your browser at [http://localhost:8000](http://localhost:8000).

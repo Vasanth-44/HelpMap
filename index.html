@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthSafe — Login</title>
+    <title>HelpMap — Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <main class="login-container">
         <header class="login-header">
-            <div class="logo-symbol">✚</div>
-            <h1>HealthSafe</h1>
+            <div class="logo-symbol">📍</div>
+            <h1>HelpMap</h1>
             <p>Community Emergency & Healthcare Assistance</p>
         </header>
 
@@ -39,7 +39,7 @@
                     </div>
                     <div class="role-card" id="roleHelper" onclick="selectRole('helper')">
                         <div class="role-icon">🤝</div>
-                        <div class="role-title">Helper / Responder</div>
+                        <div class="role-title">Responder</div>
                         <div class="role-desc">Provide assistance</div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
             <div class="demo-label">Quick test login</div>
             <div class="demo-btn-group">
                 <button type="button" class="btn-secondary" onclick="quickLogin('patient')">Login as Patient</button>
-                <button type="button" class="btn-secondary" onclick="quickLogin('helper')">Login as Helper</button>
+                <button type="button" class="btn-secondary" onclick="quickLogin('helper')">Login as Responder</button>
             </div>
         </div>
     </main>
@@ -79,7 +79,6 @@
             localStorage.setItem("userRole", selectedRole);
             localStorage.setItem("userName", selectedRole === 'patient' ? "Ramesh Kumar" : "Dr. Arvind");
 
-            // Redirect to the distinct separate dashboard
             if (selectedRole === 'patient') {
                 window.location.href = "patient.html";
             } else {

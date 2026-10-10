@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthSafe — Patient Dashboard</title>
+    <title>HelpMap — Patient Dashboard</title>
     <!-- Standard Clean Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="main.css">
@@ -13,9 +13,9 @@
     <!-- NAVBAR (PATIENT PORTAL) -->
     <header class="navbar">
         <div class="nav-left">
-            <div class="brand-badge">✚</div>
+            <div class="brand-badge">📍</div>
             <div>
-                <span class="brand-name">HealthSafe</span>
+                <span class="brand-name">HelpMap</span>
                 <span class="brand-portal">Patient Portal</span>
             </div>
         </div>
@@ -42,7 +42,7 @@
                     <div class="active-alert-header">
                         <span class="active-alert-title" id="activeStatusTitle">🚨 Emergency Request in Progress</span>
                         <span class="status-pill warning" id="activeStatusPill">
-                            <span class="status-dot"></span> Waiting for helper
+                            <span class="status-dot"></span> Waiting for responder
                         </span>
                     </div>
 
@@ -59,13 +59,13 @@
                         <strong id="activeLocation">Lakshmipuram, Main Road</strong>
                     </div>
 
-                    <!-- Assigned Helper Section -->
+                    <!-- Assigned Responder Section -->
                     <div id="assignedHelperSection" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #fed7aa; display: none;">
                         <div style="font-size: 13px; font-weight: 700; color: #15803d; margin-bottom: 6px;">
-                            ✅ Helper Assigned & Dispatched
+                            ✅ Responder Assigned & Dispatched
                         </div>
                         <div class="info-row">
-                            <span>Helper Name:</span>
+                            <span>Responder Name:</span>
                             <strong id="helperName">Dr. Arvind (Community Responder)</strong>
                         </div>
                         <div class="info-row">
@@ -94,7 +94,7 @@
                 <!-- Emergency Request Form Card -->
                 <div class="card" id="requestFormCard">
                     <h2 class="card-title">Need Healthcare Assistance?</h2>
-                    <p class="card-subtitle">Fill in the details below to notify nearby helpers and medical responders.</p>
+                    <p class="card-subtitle">Fill in the details below to notify nearby responders and healthcare volunteers on HelpMap.</p>
 
                     <form id="emergencyForm" onsubmit="submitEmergencyRequest(event)">
                         <div class="form-group">
@@ -129,7 +129,7 @@
                             <textarea 
                                 id="patientDescription" 
                                 class="form-control" 
-                                placeholder="Describe symptoms or landmark for the helper (e.g. Near yellow shop, patient is conscious)"
+                                placeholder="Describe symptoms or landmark for the responder (e.g. Near yellow shop, patient is conscious)"
                             ></textarea>
                         </div>
 
@@ -217,7 +217,6 @@
                         if (notice) notice.textContent = `✓ GPS Location Synced (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
                     },
                     () => {
-                        // Silent realistic fallback
                         const notice = document.getElementById("gpsNotice");
                         if (notice) notice.textContent = `✓ Location Active: Lakshmipuram (13.0827, 80.2707)`;
                     },
@@ -244,18 +243,18 @@
                 coords: coords,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 date: new Date().toLocaleDateString(),
-                status: "waiting", // 'waiting' or 'accepted' or 'resolved'
+                status: "waiting",
                 helper: null
             };
 
             // Store active request
             localStorage.setItem("activeEmergencyRequest", JSON.stringify(newRequest));
-            addPatientHistory(type, "Requested (Waiting for helper)");
+            addPatientHistory(type, "Requested (Waiting for responder)");
 
-            showToast("Emergency alert sent! Broadcasting to nearby helpers...");
+            showToast("Emergency alert sent! Broadcasting to nearby responders on HelpMap...");
             renderActiveState();
 
-            // Simulate automatic helper response after 3 seconds if not accepted by another window
+            // Simulate automatic responder response after 3.5 seconds if not accepted by another window
             setTimeout(() => {
                 const current = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "null");
                 if (current && current.status === "waiting") {
@@ -267,7 +266,7 @@
                         eta: "4 mins"
                     };
                     localStorage.setItem("activeEmergencyRequest", JSON.stringify(current));
-                    showToast("Helper Assigned: Dr. Arvind is on the way!");
+                    showToast("Responder Assigned: Dr. Arvind is on the way!");
                     renderActiveState();
                 }
             }, 3500);
@@ -297,7 +296,7 @@
 
             if (req.status === "accepted" && req.helper) {
                 statusPill.className = "status-pill success";
-                statusPill.innerHTML = `<span class="status-dot"></span> Helper Dispatched`;
+                statusPill.innerHTML = `<span class="status-dot"></span> Responder Dispatched`;
                 helperSection.style.display = "block";
                 btnResolved.style.display = "block";
 
@@ -307,7 +306,7 @@
                 initPatientMap(req.coords);
             } else {
                 statusPill.className = "status-pill warning";
-                statusPill.innerHTML = `<span class="status-dot"></span> Contacting helpers...`;
+                statusPill.innerHTML = `<span class="status-dot"></span> Contacting responders...`;
                 helperSection.style.display = "none";
                 btnResolved.style.display = "none";
             }
@@ -327,7 +326,7 @@
                 }).addTo(pMap);
 
                 pMarker = L.marker([lat, lng]).addTo(pMap).bindPopup("<b>Your Location</b>").openPopup();
-                hMarker = L.marker([helperLat, helperLng]).addTo(pMap).bindPopup("<b>Dr. Arvind (Helper)</b>");
+                hMarker = L.marker([helperLat, helperLng]).addTo(pMap).bindPopup("<b>Dr. Arvind (Responder)</b>");
 
                 L.polyline([[helperLat, helperLng], [lat, lng]], { color: '#2563eb', weight: 3, dashArray: '6, 6' }).addTo(pMap);
             }
@@ -390,7 +389,6 @@
             renderPatientHistory();
         }
 
-        // Listen for storage events (if helper accepts in another tab/window)
         window.addEventListener("storage", (e) => {
             if (e.key === "activeEmergencyRequest") {
                 renderActiveState();
@@ -406,7 +404,6 @@
             renderActiveState();
             renderPatientHistory();
 
-            // Default seed if history empty
             if (!localStorage.getItem("patient_history")) {
                 addPatientHistory("General Medical Assistance", "Resolved on 24 Jan");
             }
