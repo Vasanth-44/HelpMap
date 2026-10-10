@@ -3,65 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Safe</title>
+    <title>HelpMap — Healthcare Emergency & Safety Network</title>
+    <meta name="description" content="Instant real-time healthcare emergency coordination connecting patients and community responders.">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
 
-    <div class="container">
-        <h1>HEALTH SAFE</h1>
-       <form onsubmit="goToMain(event)">
-        <label>Phone Number</label>
-<input
-    type="tel"
-    id="phone"
-    placeholder="Enter 10-digit phone number"
-    maxlength="10"
-    required
->
+    <main class="login-card">
+        <header class="brand-header">
+            <div class="logo-badge">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                    <path d="M12 8v8M8 12h8" stroke="#ffffff"/>
+                </svg>
+            </div>
+            <h1>HelpMap</h1>
+            <p>Real-Time Healthcare & Emergency Network</p>
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                <span id="networkStatus">GPS Radar Ready • 24/7 Network</span>
+            </div>
+        </header>
 
-   
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-wrapper">
+                    <span class="input-prefix">+91</span>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        class="form-input" 
+                        placeholder="Enter 10-digit mobile" 
+                        maxlength="10" 
+                        required 
+                        autocomplete="tel"
+                    />
+                </div>
+            </div>
 
-    <select id="role" required>
-        <option value="">Select Role</option>
-        <option value="patient">Patient</option>
-        <option value="helper">Helper</option>
-    </select>
+            <div class="form-group">
+                <label>Select Your Active Role</label>
+                <div class="role-grid">
+                    <div class="role-option active" data-role="patient" onclick="selectRole('patient')">
+                        <span class="role-icon">🧑‍⚕️</span>
+                        <span class="role-title">Patient</span>
+                        <span class="role-desc">Need Assistance</span>
+                    </div>
+                    <div class="role-option" data-role="helper" onclick="selectRole('helper')">
+                        <span class="role-icon">🤝</span>
+                        <span class="role-title">Responder</span>
+                        <span class="role-desc">Help Nearby</span>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedRole" value="patient">
+            </div>
 
-    <button type="submit">LOGIN</button>
-</form>
-    </div>
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span>Enter Portal</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </form>
+
+        <footer class="demo-bar">
+            <div class="demo-title">Quick Demo Login</div>
+            <div class="demo-chips">
+                <button type="button" class="demo-chip" onclick="quickLogin('patient')">Demo as Patient</button>
+                <button type="button" class="demo-chip" onclick="quickLogin('helper')">Demo as Responder</button>
+            </div>
+        </footer>
+    </main>
+
     <script>
-    function goToMain(event) {
-    event.preventDefault(); // stop page refresh
+        let currentRole = 'patient';
 
-    const phoneInput = document.getElementById("phone");
-    const role = document.getElementById("role").value;
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('selectedRole').value = role;
+            document.querySelectorAll('.role-option').forEach(el => {
+                if (el.dataset.role === role) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
 
-    const phone = phoneInput.value.trim();
-    const phoneRegex = /^[0-9]{10}$/; // exactly 10 digits
+        function handleLogin(event) {
+            event.preventDefault();
+            const phoneInput = document.getElementById("phone");
+            const phone = phoneInput.value.trim().replace(/\D/g, "");
 
-    // Phone validation
-    if (!phoneRegex.test(phone)) {
-        alert("Please enter a valid 10-digit phone number");
-        phoneInput.focus();
-        return; // STOP here if invalid
-    }
+            if (phone.length !== 10) {
+                phoneInput.focus();
+                return;
+            }
 
-    // Store data
-    localStorage.setItem("phone", phone);
-    localStorage.setItem("userRole", role);
+            localStorage.setItem("phone", phone);
+            localStorage.setItem("userRole", currentRole);
+            localStorage.setItem("userName", currentRole === 'patient' ? "Ramesh Kumar" : "Dr. Arvind (Responder)");
 
-    // Redirect to common page
-    window.location.href = "main.html";
-}
-document.getElementById("phone").addEventListener("input", function () {
-    this.value = this.value.replace(/[^0-9]/g, "");
-});
+            // Auto-redirect seamlessly
+            window.location.href = "main.html";
+        }
 
+        function quickLogin(role) {
+            const samplePhone = role === 'patient' ? "9876543210" : "9812345678";
+            document.getElementById("phone").value = samplePhone;
+            selectRole(role);
+            localStorage.setItem("phone", samplePhone);
+            localStorage.setItem("userRole", role);
+            localStorage.setItem("userName", role === 'patient' ? "Ramesh Kumar" : "Dr. Arvind (Responder)");
+            window.location.href = "main.html";
+        }
 
-</script>
+        // Silent permissions setup on initial landing - never prompts repeatedly or nags
+        document.addEventListener("DOMContentLoaded", () => {
+            const phoneInput = document.getElementById("phone");
+            phoneInput.addEventListener("input", function() {
+                this.value = this.value.replace(/[^0-9]/g, "");
+            });
 
+            // Restore previous phone if exists
+            const savedPhone = localStorage.getItem("phone");
+            if (savedPhone) {
+                phoneInput.value = savedPhone;
+            }
+
+            // Silently request geolocation with immediate fallback
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        localStorage.setItem("userCoords", JSON.stringify(coords));
+                        const status = document.getElementById("networkStatus");
+                        if (status) status.textContent = "Live GPS Synced • Ready";
+                    },
+                    () => {
+                        // Silent fallback coordinates
+                        const fallbackCoords = { lat: 13.0827, lng: 80.2707 };
+                        localStorage.setItem("userCoords", JSON.stringify(fallbackCoords));
+                    },
+                    { timeout: 3000, enableHighAccuracy: true }
+                );
+            }
+        });
+    </script>
 </body>
 </html>
-
