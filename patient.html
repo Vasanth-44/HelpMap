@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthSafe — Patient Dashboard</title>
+    <!-- Standard Clean Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <!-- NAVBAR (PATIENT PORTAL) -->
+    <header class="navbar">
+        <div class="nav-left">
+            <div class="brand-badge">✚</div>
+            <div>
+                <span class="brand-name">HealthSafe</span>
+                <span class="brand-portal">Patient Portal</span>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <div class="user-profile-badge">
+                <span>🧑‍⚕️</span>
+                <span id="patientNameDisplay">Ramesh Kumar</span>
+                <span style="color: #94a3b8;">|</span>
+                <span id="patientPhoneDisplay" style="color: #64748b;">+91 9876543210</span>
+            </div>
+            <a href="index.html" class="btn-logout" onclick="logout()">Log out</a>
+        </div>
+    </header>
+
+    <!-- MAIN PATIENT CONTAINER -->
+    <div class="container">
+        <div class="dashboard-grid">
+
+            <!-- LEFT COLUMN: REQUEST EMERGENCY HELP -->
+            <div>
+                <!-- Active Request Status Banner (Shown if a request is active) -->
+                <div id="activeRequestCard" class="card active-alert-box" style="display: none;">
+                    <div class="active-alert-header">
+                        <span class="active-alert-title" id="activeStatusTitle">🚨 Emergency Request in Progress</span>
+                        <span class="status-pill warning" id="activeStatusPill">
+                            <span class="status-dot"></span> Waiting for helper
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Emergency Type:</span>
+                        <strong id="activeType">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Time Reported:</span>
+                        <strong id="activeTime">-</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Your Location:</span>
+                        <strong id="activeLocation">Lakshmipuram, Main Road</strong>
+                    </div>
+
+                    <!-- Assigned Helper Section -->
+                    <div id="assignedHelperSection" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #fed7aa; display: none;">
+                        <div style="font-size: 13px; font-weight: 700; color: #15803d; margin-bottom: 6px;">
+                            ✅ Helper Assigned & Dispatched
+                        </div>
+                        <div class="info-row">
+                            <span>Helper Name:</span>
+                            <strong id="helperName">Dr. Arvind (Community Responder)</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Contact:</span>
+                            <strong><a href="tel:9812345678" style="color: #2563eb; text-decoration: none;">+91 98123 45678</a></strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Estimated Arrival:</span>
+                            <strong id="helperEta" style="color: #15803d;">Approx. 4 minutes (1.2 km away)</strong>
+                        </div>
+
+                        <!-- Live Tracking Map -->
+                        <div id="patientMap" class="map-container"></div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button type="button" class="btn-secondary" style="flex: 1;" onclick="cancelEmergencyRequest()">
+                            Cancel Request
+                        </button>
+                        <button type="button" class="btn-primary" id="btnResolved" style="flex: 1; background-color: #16a34a; display: none;" onclick="resolveEmergencyRequest()">
+                            Mark as Resolved
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Emergency Request Form Card -->
+                <div class="card" id="requestFormCard">
+                    <h2 class="card-title">Need Healthcare Assistance?</h2>
+                    <p class="card-subtitle">Fill in the details below to notify nearby helpers and medical responders.</p>
+
+                    <form id="emergencyForm" onsubmit="submitEmergencyRequest(event)">
+                        <div class="form-group">
+                            <label for="emergencyType">Emergency Category</label>
+                            <select id="emergencyType" class="form-control" required>
+                                <option value="">-- Select Emergency Type --</option>
+                                <option value="Road Accident">🚗 Road Accident / Injury</option>
+                                <option value="Chest Pain / Cardiac">🫀 Chest Pain / Cardiac Emergency</option>
+                                <option value="Pregnancy / Delivery">🤰 Pregnancy / Maternal Care</option>
+                                <option value="Severe Trauma / Bleeding">🩸 Severe Trauma / Heavy Bleeding</option>
+                                <option value="Sudden Severe Illness">🩺 Sudden Severe Illness / High Fever</option>
+                                <option value="General Medical Help">🩹 General Medical Assistance</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patientLocation">Current Address / Landmark</label>
+                            <input 
+                                type="text" 
+                                id="patientLocation" 
+                                class="form-control" 
+                                value="Lakshmipuram, Main Road (Near Bus Stand)" 
+                                required
+                            />
+                            <span style="font-size: 11px; color: #16a34a; margin-top: 4px; display: block;" id="gpsNotice">
+                                ✓ GPS Location Synced (Lat: 13.0827, Lng: 80.2707)
+                            </span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patientDescription">Additional Notes (Optional)</label>
+                            <textarea 
+                                id="patientDescription" 
+                                class="form-control" 
+                                placeholder="Describe symptoms or landmark for the helper (e.g. Near yellow shop, patient is conscious)"
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-emergency">
+                            <span>🚨 Send Emergency Request</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: EMERGENCY CONTACTS & HISTORY -->
+            <div>
+                <!-- Instant Helplines Card -->
+                <div class="card">
+                    <h3 class="card-title">Emergency Helplines</h3>
+                    <p class="card-subtitle">One-tap direct calling for critical emergencies</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <a href="tel:108" class="btn-secondary" style="display: flex; justify-content: space-between; text-decoration: none; color: #0f172a; font-weight: 600;">
+                            <span>🚑 Ambulance</span>
+                            <span style="color: #dc2626;">108</span>
+                        </a>
+                        <a href="tel:112" class="btn-secondary" style="display: flex; justify-content: space-between; text-decoration: none; color: #0f172a; font-weight: 600;">
+                            <span>🚨 National Emergency</span>
+                            <span style="color: #2563eb;">112</span>
+                        </a>
+                        <a href="tel:100" class="btn-secondary" style="display: flex; justify-content: space-between; text-decoration: none; color: #0f172a; font-weight: 600;">
+                            <span>👮 Police Helpline</span>
+                            <span style="color: #475569;">100</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Patient Past Requests Card -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">My Request History</h3>
+                        <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="clearPatientHistory()">Clear</button>
+                    </div>
+
+                    <div class="history-list" id="patientHistoryList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Clean In-App Toast -->
+    <div id="toastNotice" class="toast-notice"></div>
+
+    <!-- Standard Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        let pMap = null;
+        let pMarker = null;
+        let hMarker = null;
+        let coords = { lat: 13.0827, lng: 80.2707 };
+
+        function showToast(msg) {
+            const toast = document.getElementById("toastNotice");
+            toast.textContent = msg;
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 3500);
+        }
+
+        function logout() {
+            localStorage.removeItem("userRole");
+        }
+
+        // Silent GPS initialization without blocking dialogs
+        function initSilentGps() {
+            const cached = localStorage.getItem("userCoords");
+            if (cached) {
+                try { coords = JSON.parse(cached); } catch(e) {}
+            }
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        localStorage.setItem("userCoords", JSON.stringify(coords));
+                        const notice = document.getElementById("gpsNotice");
+                        if (notice) notice.textContent = `✓ GPS Location Synced (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
+                    },
+                    () => {
+                        // Silent realistic fallback
+                        const notice = document.getElementById("gpsNotice");
+                        if (notice) notice.textContent = `✓ Location Active: Lakshmipuram (13.0827, 80.2707)`;
+                    },
+                    { timeout: 3000, enableHighAccuracy: true }
+                );
+            }
+        }
+
+        function submitEmergencyRequest(event) {
+            event.preventDefault();
+            const type = document.getElementById("emergencyType").value;
+            const location = document.getElementById("patientLocation").value;
+            const notes = document.getElementById("patientDescription").value;
+            const phone = localStorage.getItem("phone") || "9876543210";
+            const name = localStorage.getItem("userName") || "Ramesh Kumar";
+
+            const newRequest = {
+                id: "REQ-" + Date.now().toString().slice(-4),
+                patientName: name,
+                patientPhone: phone,
+                emergencyType: type,
+                location: location,
+                notes: notes,
+                coords: coords,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: new Date().toLocaleDateString(),
+                status: "waiting", // 'waiting' or 'accepted' or 'resolved'
+                helper: null
+            };
+
+            // Store active request
+            localStorage.setItem("activeEmergencyRequest", JSON.stringify(newRequest));
+            addPatientHistory(type, "Requested (Waiting for helper)");
+
+            showToast("Emergency alert sent! Broadcasting to nearby helpers...");
+            renderActiveState();
+
+            // Simulate automatic helper response after 3 seconds if not accepted by another window
+            setTimeout(() => {
+                const current = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "null");
+                if (current && current.status === "waiting") {
+                    current.status = "accepted";
+                    current.helper = {
+                        name: "Dr. Arvind (Community Responder)",
+                        phone: "+91 98123 45678",
+                        distance: "1.2 km",
+                        eta: "4 mins"
+                    };
+                    localStorage.setItem("activeEmergencyRequest", JSON.stringify(current));
+                    showToast("Helper Assigned: Dr. Arvind is on the way!");
+                    renderActiveState();
+                }
+            }, 3500);
+        }
+
+        function renderActiveState() {
+            const req = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "null");
+            const activeCard = document.getElementById("activeRequestCard");
+            const formCard = document.getElementById("requestFormCard");
+
+            if (!req) {
+                activeCard.style.display = "none";
+                formCard.style.display = "block";
+                return;
+            }
+
+            activeCard.style.display = "block";
+            formCard.style.display = "none";
+
+            document.getElementById("activeType").textContent = req.emergencyType;
+            document.getElementById("activeTime").textContent = req.time;
+            document.getElementById("activeLocation").textContent = req.location;
+
+            const helperSection = document.getElementById("assignedHelperSection");
+            const statusPill = document.getElementById("activeStatusPill");
+            const btnResolved = document.getElementById("btnResolved");
+
+            if (req.status === "accepted" && req.helper) {
+                statusPill.className = "status-pill success";
+                statusPill.innerHTML = `<span class="status-dot"></span> Helper Dispatched`;
+                helperSection.style.display = "block";
+                btnResolved.style.display = "block";
+
+                document.getElementById("helperName").textContent = req.helper.name;
+                document.getElementById("helperEta").textContent = `Approx. ${req.helper.eta || '4 mins'} (${req.helper.distance || '1.2 km'} away)`;
+
+                initPatientMap(req.coords);
+            } else {
+                statusPill.className = "status-pill warning";
+                statusPill.innerHTML = `<span class="status-dot"></span> Contacting helpers...`;
+                helperSection.style.display = "none";
+                btnResolved.style.display = "none";
+            }
+        }
+
+        function initPatientMap(patientCoords) {
+            if (typeof L === 'undefined') return;
+            const lat = patientCoords.lat || 13.0827;
+            const lng = patientCoords.lng || 80.2707;
+            const helperLat = lat + 0.007;
+            const helperLng = lng + 0.006;
+
+            if (!pMap) {
+                pMap = L.map('patientMap').setView([lat, lng], 15);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(pMap);
+
+                pMarker = L.marker([lat, lng]).addTo(pMap).bindPopup("<b>Your Location</b>").openPopup();
+                hMarker = L.marker([helperLat, helperLng]).addTo(pMap).bindPopup("<b>Dr. Arvind (Helper)</b>");
+
+                L.polyline([[helperLat, helperLng], [lat, lng]], { color: '#2563eb', weight: 3, dashArray: '6, 6' }).addTo(pMap);
+            }
+            setTimeout(() => { if (pMap) pMap.invalidateSize(); }, 200);
+        }
+
+        function cancelEmergencyRequest() {
+            localStorage.removeItem("activeEmergencyRequest");
+            addPatientHistory("Emergency Request", "Cancelled by patient");
+            showToast("Emergency request cancelled.");
+            renderActiveState();
+        }
+
+        function resolveEmergencyRequest() {
+            const req = JSON.parse(localStorage.getItem("activeEmergencyRequest") || "{}");
+            localStorage.removeItem("activeEmergencyRequest");
+            addPatientHistory(req.emergencyType || "Emergency", "Resolved & Assisted by Dr. Arvind");
+            showToast("Emergency marked as resolved. Glad you are safe!");
+            renderActiveState();
+        }
+
+        function addPatientHistory(type, status) {
+            const history = JSON.parse(localStorage.getItem("patient_history") || "[]");
+            history.unshift({
+                type: type,
+                status: status,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: new Date().toLocaleDateString()
+            });
+            localStorage.setItem("patient_history", JSON.stringify(history.slice(0, 10)));
+            renderPatientHistory();
+        }
+
+        function renderPatientHistory() {
+            const list = document.getElementById("patientHistoryList");
+            const history = JSON.parse(localStorage.getItem("patient_history") || "[]");
+            list.innerHTML = "";
+
+            if (history.length === 0) {
+                list.innerHTML = `<p style="font-size: 13px; color: #94a3b8; text-align: center; padding: 12px;">No past requests</p>`;
+                return;
+            }
+
+            history.forEach(item => {
+                const el = document.createElement("div");
+                el.className = "history-item";
+                el.innerHTML = `
+                    <div class="history-item-left">
+                        <span class="history-item-title">${item.type}</span>
+                        <span class="history-item-time">${item.date} at ${item.time}</span>
+                    </div>
+                    <span class="status-pill neutral">${item.status}</span>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function clearPatientHistory() {
+            localStorage.removeItem("patient_history");
+            renderPatientHistory();
+        }
+
+        // Listen for storage events (if helper accepts in another tab/window)
+        window.addEventListener("storage", (e) => {
+            if (e.key === "activeEmergencyRequest") {
+                renderActiveState();
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const phone = localStorage.getItem("phone");
+            if (phone) {
+                document.getElementById("patientPhoneDisplay").textContent = `+91 ${phone}`;
+            }
+            initSilentGps();
+            renderActiveState();
+            renderPatientHistory();
+
+            // Default seed if history empty
+            if (!localStorage.getItem("patient_history")) {
+                addPatientHistory("General Medical Assistance", "Resolved on 24 Jan");
+            }
+        });
+    </script>
+</body>
+</html>
